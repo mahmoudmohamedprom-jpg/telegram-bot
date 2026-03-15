@@ -1,0 +1,6 @@
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8597342415:AAHttSpYjyIyJhEAOckLrEmvq0c3_OACIRI')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyB-01CkzbL4WyujYNCBF14FsRP4Z0znHRw')
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///bot.db')
+SECRET_KEY = os.getenv('SECRET_KEY', 'super-secret-key-2024')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+PORT = int(os.getenv('PORT', 5000))
