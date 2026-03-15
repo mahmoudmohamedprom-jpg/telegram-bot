@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إعدادات البوت</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #070b14; --surface: #0d1424; --surface2: #111827;
+  --border: #1a2540; --border2: #243356;
+  --accent: #00d4ff; --accent2: #7b2fff;
+  --text: #e2e8f0; --text2: #94a3b8; --muted: #475569;
+  --danger: #ff4757; --success: #00d68f;
+  --sidebar-w: 260px;
+}
+body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+.sidebar {
+  width: var(--sidebar-w); background: var(--surface); border-left: 1px solid var(--border);
+  height: 100vh; position: fixed; right: 0; top: 0; display: flex; flex-direction: column;
+}
+.sidebar-header { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { width: 44px; height: 44px; background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(123,47,255,0.2)); border: 1px solid rgba(0,212,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.brand-name { font-size: 14px; font-weight: 700; }
+.brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.nav { flex: 1; padding: 16px 12px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all 0.15s; color: var(--text2); font-size: 13px; font-weight: 500; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: right; font-family: inherit; }
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.nav-item.active { background: rgba(0,212,255,0.1); color: var(--accent); }
+.sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+.logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.15); color: var(--danger); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.logout-btn:hover { background: rgba(255,71,87,0.15); }
+.main { margin-right: var(--sidebar-w); flex: 1; }
+.topbar { padding: 20px 32px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; }
+.page-title { font-size: 18px; font-weight: 700; }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.content { padding: 32px; }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 20px; }
+.card-header { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 14px; font-weight: 600; }
+.card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.card-body { padding: 20px; }
+.form-group { margin-bottom: 18px; }
+.form-group:last-child { margin-bottom: 0; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; }
+input[type="text"], input[type="password"], textarea {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: inherit;
+  color: var(--text); outline: none; transition: all 0.2s;
+}
+input:focus, textarea:focus { border-color: var(--accent); background: rgba(0,212,255,0.04); }
+textarea { resize: vertical; min-height: 90px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.25); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.save-result { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
+.save-result.ok { background: rgba(0,214,143,0.1); color: var(--success); border: 1px solid rgba(0,214,143,0.2); }
+.save-result.err { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
+.info-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(26,37,64,0.5); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 12px; color: var(--muted); }
+.info-val { font-size: 13px; color: var(--text); font-weight: 500; }
+.info-val.online { color: var(--success); }
+.info-val.api { color: var(--accent); font-family: monospace; font-size: 11px; }
+@media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); padding: 12px 20px; border-radius: 10px; font-size: 13px; color: var(--text); z-index: 9999; opacity: 0; transition: opacity 0.3s; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <div class="brand-icon">🤖</div>
+      <div>
+        <div class="brand-name">بوت المبرمج الذكي</div>
+        <div class="brand-sub">الإعدادات</div>
+      </div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item" onclick="window.location='/'">📊 لوحة التحكم</button>
+    <button class="nav-item" onclick="window.location='/'">💬 المحادثات</button>
+    <button class="nav-item" onclick="window.location='/'">👥 المستخدمون</button>
+    <button class="nav-item active">⚙️ الإعدادات</button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">⚙️ إعدادات البوت</div>
+      <div class="page-sub">تخصيص البوت وإعدادات النظام</div>
+    </div>
+    <div>
+      <button class="btn btn-outline" onclick="window.location='/'">← رجوع</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="settings-grid">
+
+      <!-- Bot Settings -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🤖 إعدادات البوت</div>
+          <div class="card-sub">تخصيص رسائل ومعلومات البوت</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>اسم البوت</label>
+            <input type="text" id="botName" placeholder="بوت المبرمج الذكي">
+          </div>
+          <div class="form-group">
+            <label>رسالة الترحيب (تظهر عند /start)</label>
+            <textarea id="welcomeMessage" placeholder="رسالة الترحيب..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ التغييرات</button>
+          <div class="save-result" id="saveResult"></div>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔐 الأمان</div>
+          <div class="card-sub">تغيير كلمة مرور لوحة التحكم</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>كلمة المرور الجديدة</label>
+            <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+          </div>
+          <div class="form-group">
+            <label>تأكيد كلمة المرور</label>
+            <input type="password" id="confirmPassword" placeholder="أعد كتابة كلمة المرور">
+          </div>
+          <button class="btn btn-primary" onclick="changePassword()">🔑 تغيير كلمة المرور</button>
+          <div class="save-result" id="pwdResult"></div>
+        </div>
+      </div>
+
+      <!-- Bot Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 معلومات البوت</div>
+          <div class="card-sub">بيانات الاتصال والحالة</div>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">حالة البوت</span>
+            <span class="info-val online" id="infoStatus">نشط ✅</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">توكن البوت</span>
+            <span class="info-val api">8597342415:AAH...OACIRI</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Gemini API</span>
+            <span class="info-val api">AIzaSyB-01Ck...HRw</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">قاعدة البيانات</span>
+            <span class="info-val online">SQLite ✅</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ إجراءات سريعة</div>
+          <div class="card-sub">تحكم مباشر في البوت</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-primary" onclick="toggleBot()" id="toggleBotBtn">⏸ إيقاف البوت مؤقتاً</button>
+            <button class="btn btn-outline" onclick="window.open('https://t.me/'+botUsername,'_blank')" id="openBotBtn">📲 فتح البوت في تلغرام</button>
+            <button class="btn btn-outline" style="color:var(--danger);border-color:rgba(255,71,87,0.3)" onclick="confirmClear()">🗑 مسح سجل المحادثات</button>
+          </div>
+          <div class="save-result" id="actionResult"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let botUsername = 'YourBot';
+
+async function loadSettings() {
+  try {
+    const r = await fetch('/api/settings');
+    const d = await r.json();
+    if (d.bot_name) document.getElementById('botName').value = d.bot_name;
+    if (d.welcome_message) document.getElementById('welcomeMessage').value = d.welcome_message;
+    if (d.bot_active) {
+      const btn = document.getElementById('toggleBotBtn');
+      btn.textContent = d.bot_active === 'true' ? '⏸ إيقاف البوت مؤقتاً' : '▶ تشغيل البوت';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function saveSettings() {
+  const res = document.getElementById('saveResult');
+  try {
+    const r = await fetch('/api/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        bot_name: document.getElementById('botName').value,
+        welcome_message: document.getElementById('welcomeMessage').value
+      })
+    });
+    const d = await r.json();
+    res.className = d.success ? 'save-result ok' : 'save-result err';
+    res.textContent = d.success ? '✅ تم حفظ الإعدادات بنجاح! ستظهر التغييرات فوراً في البوت.' : (d.error || 'حدث خطأ');
+    res.style.display = 'block';
+    showToast('✅ تم الحفظ');
+  } catch(e) {
+    res.className = 'save-result err';
+    res.textContent = 'خطأ في الاتصال';
+    res.style.display = 'block';
+  }
+}
+
+async function changePassword() {
+  const np = document.getElementById('newPassword').value;
+  const cp = document.getElementById('confirmPassword').value;
+  const res = document.getElementById('pwdResult');
+  
+  if (!np || np.length < 6) { showRes(res, false, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+  if (np !== cp) { showRes(res, false, 'كلمتا المرور غير متطابقتين'); return; }
+  
+  try {
+    const r = await fetch('/api/settings', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({admin_password: np})
+    });
+    const d = await r.json();
+    showRes(res, d.success, d.success ? '✅ تم تغيير كلمة المرور' : 'حدث خطأ');
+    if (d.success) { document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
+  } catch(e) { showRes(res, false, 'خطأ في الاتصال'); }
+}
+
+function showRes(el, ok, msg) {
+  el.className = 'save-result ' + (ok ? 'ok' : 'err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function toggleBot() {
+  const r = await fetch('/api/bot/toggle', {method:'POST'});
+  const d = await r.json();
+  const btn = document.getElementById('toggleBotBtn');
+  btn.textContent = d.active ? '⏸ إيقاف البوت مؤقتاً' : '▶ تشغيل البوت';
+  showToast(d.active ? '✅ البوت نشط' : '⏸ البوت متوقف');
+}
+
+function confirmClear() {
+  if (confirm('هل أنت متأكد من مسح سجل المحادثات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+    showToast('⚠ هذه الميزة غير متاحة حالياً');
+  }
+}
+
+async function logout() {
+  await fetch('/api/logout', {method:'POST'});
+  window.location.href = '/login';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — بوت المبرمج الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #070b14;
+  --surface: #0d1424;
+  --surface2: #111827;
+  --border: #1a2540;
+  --border2: #243356;
+  --accent: #00d4ff;
+  --accent2: #7b2fff;
+  --accent3: #00ff94;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --muted: #475569;
+  --danger: #ff4757;
+  --warning: #ffa502;
+  --success: #00d68f;
+  --sidebar-w: 260px;
+}
+
+body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  height: 100vh;
+  position: fixed;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(123,47,255,0.2));
+  border: 1px solid rgba(0,212,255,0.25);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.brand-text { flex: 1; min-width: 0; }
+.brand-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.bot-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  background: rgba(0,214,143,0.06);
+  border-bottom: 1px solid var(--border);
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.status-dot.offline { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-label { font-size: 12px; color: var(--text2); flex: 1; }
+.status-toggle {
+  background: none; border: 1px solid var(--border2);
+  border-radius: 6px; padding: 3px 8px;
+  font-size: 10px; color: var(--text2);
+  font-family: inherit; cursor: pointer;
+  transition: all 0.2s;
+}
+.status-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+.nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+
+.nav-section { margin-bottom: 20px; }
+.nav-section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted); padding: 0 8px 8px;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.nav-item.active { background: rgba(0,212,255,0.1); color: var(--accent); }
+.nav-item .icon { font-size: 16px; flex-shrink: 0; }
+.nav-badge {
+  margin-right: auto; background: var(--accent2);
+  color: white; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.logout-btn {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.15);
+  color: var(--danger); font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+}
+.logout-btn:hover { background: rgba(255,71,87,0.15); }
+
+/* ── Main Content ── */
+.main {
+  margin-right: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-width: 0;
+}
+
+.topbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.page-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.topbar-actions { display: flex; gap: 8px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  cursor: pointer; border: none; transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.25); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.content { padding: 32px; flex: 1; }
+
+/* ── Tabs ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Stats Grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover { border-color: var(--border2); }
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+
+.stat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), transparent); }
+.stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+.stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+.stat-card:nth-child(4)::before { background: linear-gradient(90deg, var(--warning), transparent); }
+
+.stat-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.stat-icon { font-size: 22px; }
+.stat-change { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+.stat-change.up { background: rgba(0,214,143,0.12); color: var(--success); }
+.stat-val { font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--muted); }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 16px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--muted); font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  text-align: right; white-space: nowrap;
+}
+tbody td {
+  padding: 12px 16px;
+  font-size: 13px; color: var(--text2);
+  border-bottom: 1px solid rgba(26,37,64,0.5);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+tbody tr { transition: background 0.15s; }
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-text { background: rgba(0,212,255,0.1); color: var(--accent); }
+.badge-code { background: rgba(123,47,255,0.1); color: var(--accent2); }
+.badge-active { background: rgba(0,214,143,0.1); color: var(--success); }
+.badge-banned { background: rgba(255,71,87,0.1); color: var(--danger); }
+
+.action-btn {
+  padding: 4px 10px; border-radius: 6px; font-size: 11px;
+  font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+  transition: all 0.15s;
+}
+.action-ban { background: rgba(255,71,87,0.1); color: var(--danger); }
+.action-ban:hover { background: rgba(255,71,87,0.2); }
+.action-unban { background: rgba(0,214,143,0.1); color: var(--success); }
+.action-unban:hover { background: rgba(0,214,143,0.2); }
+
+/* ── Chat Log ── */
+.chat-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(26,37,64,0.5);
+  transition: background 0.15s;
+}
+.chat-item:hover { background: rgba(255,255,255,0.015); }
+.chat-item:last-child { border-bottom: none; }
+.chat-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.chat-user { font-size: 13px; font-weight: 600; color: var(--text); }
+.chat-time { font-size: 11px; color: var(--muted); }
+.chat-type-badge { margin-right: auto; }
+.chat-msg { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+.chat-resp {
+  font-size: 12px; color: var(--muted);
+  background: rgba(255,255,255,0.03);
+  border-right: 2px solid var(--border2);
+  padding: 8px 10px;
+  border-radius: 0 6px 6px 0;
+  max-height: 60px; overflow: hidden;
+}
+
+/* ── Broadcast ── */
+.broadcast-area {
+  padding: 20px;
+}
+.broadcast-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 14px; font-family: inherit;
+  color: var(--text); resize: vertical;
+  min-height: 100px; outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 12px;
+}
+.broadcast-textarea:focus { border-color: var(--accent); }
+.broadcast-result {
+  font-size: 13px; margin-top: 10px; padding: 10px 14px;
+  border-radius: 8px; display: none;
+}
+.broadcast-result.ok { background: rgba(0,214,143,0.1); color: var(--success); border: 1px solid rgba(0,214,143,0.2); }
+.broadcast-result.err { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
+
+/* ── Loading ── */
+.loading-row td { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(0,212,255,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-left: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .sidebar { transform: translateX(100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-right: 0; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 16px; }
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--surface2); border: 1px solid var(--border2);
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 13px; color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 9999; opacity: 0; transition: opacity 0.3s;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <div class="brand-icon">🤖</div>
+      <div class="brand-text">
+        <div class="brand-name">بوت المبرمج الذكي</div>
+        <div class="brand-sub">لوحة التحكم الرئيسية</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bot-status" id="botStatusBar">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-label" id="statusLabel">البوت نشط</span>
+    <button class="status-toggle" onclick="toggleBot()" id="toggleBtn">إيقاف</button>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-section-title">الرئيسية</div>
+      <button class="nav-item active" onclick="showTab('dashboard', this)">
+        <span class="icon">📊</span> لوحة التحكم
+      </button>
+      <button class="nav-item" onclick="showTab('chats', this)">
+        <span class="icon">💬</span> المحادثات
+        <span class="nav-badge" id="chatsBadge">—</span>
+      </button>
+      <button class="nav-item" onclick="showTab('codes', this)">
+        <span class="icon">👨‍💻</span> الأكواد المولدة
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">الإدارة</div>
+      <button class="nav-item" onclick="showTab('users', this)">
+        <span class="icon">👥</span> المستخدمون
+        <span class="nav-badge" id="usersBadge">—</span>
+      </button>
+      <button class="nav-item" onclick="showTab('broadcast', this)">
+        <span class="icon">📢</span> بث رسالة
+      </button>
+      <button class="nav-item" onclick="window.location='/settings'">
+        <span class="icon">⚙️</span> الإعدادات
+      </button>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()">
+      <span>🚪</span> تسجيل الخروج
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">لوحة التحكم</div>
+      <div class="page-sub" id="pageSubtitle">نظرة عامة على البوت والإحصائيات</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="refreshAll()">🔄 تحديث</button>
+      <button class="btn btn-primary" onclick="window.location='/settings'">⚙️ إعدادات</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">👥</div>
+            <div class="stat-change up" id="statUsers">—</div>
+          </div>
+          <div class="stat-val" id="totalUsers">—</div>
+          <div class="stat-label">إجمالي المستخدمين</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">💬</div>
+            <div class="stat-change up">رسالة</div>
+          </div>
+          <div class="stat-val" id="totalChats">—</div>
+          <div class="stat-label">إجمالي المحادثات</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">👨‍💻</div>
+            <div class="stat-change up">كود</div>
+          </div>
+          <div class="stat-val" id="totalCodes">—</div>
+          <div class="stat-label">أكواد مولدة</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-change up">اليوم</div>
+          </div>
+          <div class="stat-val" id="activeToday">—</div>
+          <div class="stat-label">نشطون اليوم</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📋 آخر المحادثات</div>
+            <div class="card-sub">أحدث 10 محادثات مع البوت</div>
+          </div>
+          <button class="btn btn-outline" onclick="showTab('chats', document.querySelector('[onclick*=\"chats\"]'))">عرض الكل</button>
+        </div>
+        <div id="recentChats"><div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">جاري التحميل... <span class="spinner"></span></div></div>
+      </div>
+    </div>
+
+    <!-- Chats Tab -->
+    <div class="tab-content" id="tab-chats">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">💬 سجل المحادثات</div>
+            <div class="card-sub">جميع المحادثات مع البوت</div>
+          </div>
+          <button class="btn btn-outline" onclick="loadChats()">🔄 تحديث</button>
+        </div>
+        <div id="chatsList"><div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- Codes Tab -->
+    <div class="tab-content" id="tab-codes">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👨‍💻 الأكواد المولدة</div>
+            <div class="card-sub">قائمة الأكواد التي تم توليدها</div>
+          </div>
+          <button class="btn btn-outline" onclick="loadCodes()">🔄 تحديث</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>المستخدم</th>
+                <th>اللغة</th>
+                <th>الوصف</th>
+                <th>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody id="codesTable">
+              <tr class="loading-row"><td colspan="5">جاري التحميل... <span class="spinner"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="tab-content" id="tab-users">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👥 إدارة المستخدمين</div>
+            <div class="card-sub">قائمة جميع مستخدمي البوت</div>
+          </div>
+          <button class="btn btn-outline" onclick="loadUsers()">🔄 تحديث</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>المستخدم</th>
+                <th>المعرف</th>
+                <th>المحادثات</th>
+                <th>الأكواد</th>
+                <th>آخر نشاط</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable">
+              <tr class="loading-row"><td colspan="7">جاري التحميل... <span class="spinner"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broadcast Tab -->
+    <div class="tab-content" id="tab-broadcast">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📢 إرسال رسالة جماعية</div>
+            <div class="card-sub">إرسال رسالة لجميع مستخدمي البوت</div>
+          </div>
+        </div>
+        <div class="broadcast-area">
+          <textarea class="broadcast-textarea" id="broadcastMsg" placeholder="اكتب رسالتك هنا... سيتم إرسالها لجميع المستخدمين النشطين"></textarea>
+          <button class="btn btn-primary" onclick="sendBroadcast()">📤 إرسال للجميع</button>
+          <div class="broadcast-result" id="broadcastResult"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentTab = 'dashboard';
+
+function showTab(tab, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (el) el.classList.add('active');
+  currentTab = tab;
+  
+  const titles = {
+    dashboard: ['لوحة التحكم', 'نظرة عامة على البوت والإحصائيات'],
+    chats: ['المحادثات', 'سجل جميع المحادثات مع البوت'],
+    codes: ['الأكواد المولدة', 'الأكواد البرمجية التي طلبها المستخدمون'],
+    users: ['المستخدمون', 'إدارة مستخدمي البوت'],
+    broadcast: ['بث رسالة', 'إرسال رسالة لجميع المستخدمين']
+  };
+  if (titles[tab]) {
+    document.getElementById('pageTitle').textContent = titles[tab][0];
+    document.getElementById('pageSubtitle').textContent = titles[tab][1];
+  }
+
+  if (tab === 'chats') loadChats();
+  if (tab === 'codes') loadCodes();
+  if (tab === 'users') loadUsers();
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    document.getElementById('totalUsers').textContent = d.total_users ?? '0';
+    document.getElementById('totalChats').textContent = d.total_chats ?? '0';
+    document.getElementById('totalCodes').textContent = d.total_codes ?? '0';
+    document.getElementById('activeToday').textContent = d.active_today ?? '0';
+    document.getElementById('usersBadge').textContent = d.total_users ?? '0';
+    document.getElementById('chatsBadge').textContent = d.total_chats ?? '0';
+    
+    const dot = document.getElementById('statusDot');
+    const lbl = document.getElementById('statusLabel');
+    const tbtn = document.getElementById('toggleBtn');
+    if (d.bot_active) {
+      dot.className = 'status-dot';
+      lbl.textContent = 'البوت نشط';
+      tbtn.textContent = 'إيقاف';
+    } else {
+      dot.className = 'status-dot offline';
+      lbl.textContent = 'البوت متوقف';
+      tbtn.textContent = 'تشغيل';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function loadRecentChats() {
+  try {
+    const r = await fetch('/api/chats?limit=10');
+    const chats = await r.json();
+    const el = document.getElementById('recentChats');
+    if (!chats.length) {
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">لا توجد محادثات بعد</div>';
+      return;
+    }
+    el.innerHTML = chats.map(c => `
+      <div class="chat-item">
+        <div class="chat-meta">
+          <span class="chat-user">👤 ${c.user || 'مجهول'}</span>
+          ${c.username ? `<span style="font-size:11px;color:var(--muted)">@${c.username}</span>` : ''}
+          <span class="chat-time">${formatTime(c.timestamp)}</span>
+          <span class="chat-type-badge badge ${c.type === 'code' ? 'badge-code' : 'badge-text'}">${c.type === 'code' ? '👨‍💻 كود' : '💬 نص'}</span>
+        </div>
+        <div class="chat-msg">💬 ${escHtml(c.message || '')}</div>
+        <div class="chat-resp">🤖 ${escHtml((c.response || '').substring(0, 150))}${(c.response || '').length > 150 ? '...' : ''}</div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function loadChats() {
+  try {
+    const r = await fetch('/api/chats?limit=50');
+    const chats = await r.json();
+    const el = document.getElementById('chatsList');
+    if (!chats.length) {
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">لا توجد محادثات بعد</div>';
+      return;
+    }
+    el.innerHTML = chats.map(c => `
+      <div class="chat-item">
+        <div class="chat-meta">
+          <span class="chat-user">👤 ${escHtml(c.user || 'مجهول')}</span>
+          ${c.username ? `<span style="font-size:11px;color:var(--muted)">@${escHtml(c.username)}</span>` : ''}
+          <span class="chat-time">${formatTime(c.timestamp)}</span>
+          <span class="chat-type-badge badge ${c.type === 'code' ? 'badge-code' : 'badge-text'}">${c.type === 'code' ? '👨‍💻 كود' : '💬 نص'}</span>
+        </div>
+        <div class="chat-msg">💬 ${escHtml(c.message || '')}</div>
+        <div class="chat-resp">🤖 ${escHtml((c.response || '').substring(0, 200))}${(c.response || '').length > 200 ? '...' : ''}</div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function loadCodes() {
+  try {
+    const r = await fetch('/api/codes');
+    const codes = await r.json();
+    const tb = document.getElementById('codesTable');
+    if (!codes.length) {
+      tb.innerHTML = '<tr class="loading-row"><td colspan="5">لا توجد أكواد بعد</td></tr>';
+      return;
+    }
+    tb.innerHTML = codes.map((c, i) => `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td style="color:var(--text)">👤 ${escHtml(c.user || 'مجهول')}</td>
+        <td><span class="badge badge-code">${escHtml(c.language || '')}</span></td>
+        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.description || '')}</td>
+        <td style="white-space:nowrap">${formatTime(c.timestamp)}</td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch('/api/users');
+    const users = await r.json();
+    const tb = document.getElementById('usersTable');
+    if (!users.length) {
+      tb.innerHTML = '<tr class="loading-row"><td colspan="7">لا يوجد مستخدمون بعد</td></tr>';
+      return;
+    }
+    tb.innerHTML = users.map(u => `
+      <tr>
+        <td style="color:var(--text)">
+          <strong>${escHtml(u.first_name || 'مجهول')} ${escHtml(u.last_name || '')}</strong>
+          ${u.username ? `<br><span style="font-size:11px;color:var(--muted)">@${escHtml(u.username)}</span>` : ''}
+        </td>
+        <td style="font-family:monospace;font-size:12px;color:var(--muted)">${u.telegram_id}</td>
+        <td>${u.chats_count}</td>
+        <td>${u.codes_count}</td>
+        <td style="white-space:nowrap;font-size:12px">${formatTime(u.last_active)}</td>
+        <td><span class="badge ${u.is_banned ? 'badge-banned' : 'badge-active'}">${u.is_banned ? '🚫 محظور' : '✅ نشط'}</span></td>
+        <td>
+          <button class="action-btn ${u.is_banned ? 'action-unban' : 'action-ban'}" onclick="banUser(${u.id}, this)">
+            ${u.is_banned ? '✅ رفع الحظر' : '🚫 حظر'}
+          </button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function banUser(id, btn) {
+  try {
+    const r = await fetch(`/api/users/${id}/ban`, {method:'POST'});
+    const d = await r.json();
+    showToast(d.banned ? 'تم حظر المستخدم' : 'تم رفع الحظر');
+    loadUsers();
+  } catch(e) { showToast('حدث خطأ'); }
+}
+
+async function toggleBot() {
+  try {
+    const r = await fetch('/api/bot/toggle', {method:'POST'});
+    const d = await r.json();
+    showToast(d.active ? '✅ البوت نشط الآن' : '⏸ البوت متوقف');
+    loadStats();
+  } catch(e) { showToast('حدث خطأ'); }
+}
+
+async function sendBroadcast() {
+  const msg = document.getElementById('broadcastMsg').value.trim();
+  const res = document.getElementById('broadcastResult');
+  if (!msg) { res.className = 'broadcast-result err'; res.textContent = 'يرجى كتابة الرسالة أولاً'; res.style.display='block'; return; }
+  
+  try {
+    const r = await fetch('/api/broadcast', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg})
+    });
+    const d = await r.json();
+    if (d.success) {
+      res.className = 'broadcast-result ok';
+      res.textContent = `✅ تم الإرسال بنجاح إلى ${d.sent} مستخدم`;
+      document.getElementById('broadcastMsg').value = '';
+    } else {
+      res.className = 'broadcast-result err';
+      res.textContent = d.error || 'حدث خطأ';
+    }
+    res.style.display = 'block';
+  } catch(e) {
+    res.className = 'broadcast-result err';
+    res.textContent = 'خطأ في الاتصال';
+    res.style.display = 'block';
+  }
+}
+
+async function logout() {
+  await fetch('/api/logout', {method:'POST'});
+  window.location.href = '/login';
+}
+
+function refreshAll() {
+  loadStats();
+  loadRecentChats();
+  showToast('تم التحديث');
+}
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString('ar-SA', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  } catch { return ts; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+loadStats();
+loadRecentChats();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
